@@ -1,0 +1,71 @@
+package com.consumption.kaban.model;
+
+import java.util.Date;
+
+public class Meta {
+    private int id;
+    protected int projetoId;
+
+    private String descricao;
+
+    private boolean concluida;
+
+    public int getProjetoId() {
+        return projetoId;
+    }
+
+    public void setProjetoId(int projetoId) {
+        this.projetoId = projetoId;
+    }
+
+    private Date prazo;
+
+
+
+    // Construtor sem ID (útil para novos registros)
+    public Meta(String descricao, Date prazo) {
+        this.descricao = descricao;
+        this.prazo = prazo;
+        this.concluida = false;
+    }
+
+    // Getters e Setters
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+
+    public boolean isConcluida() {
+        return concluida;
+    }
+
+    public void setConcluida(boolean concluida) {
+        this.concluida = concluida;
+    }
+
+    public Date getPrazo() {
+        return prazo;
+    }
+
+    public void setPrazo(Date prazo) {
+        this.prazo = prazo;
+    }
+
+    // Outros métodos (segundo o diagrama)
+    public void marcarConcluida() {
+        this.concluida = true;
+    }
+
+
+}
