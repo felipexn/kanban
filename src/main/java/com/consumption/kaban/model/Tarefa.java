@@ -5,18 +5,13 @@ import com.consumption.kaban.enums.TarefaStatusEnum;
 import java.util.Date;
 
 public  class Tarefa {
+
     protected int id;
     protected String titulo;
     protected String descricao;
     protected int projetoId;
     protected Date prazo;
-
-
-
     protected Boolean comPrazo;
-
-
-
     protected TarefaStatusEnum status;
 
     public Tarefa(String titulo, String descricao, TarefaStatusEnum status) {
@@ -29,7 +24,7 @@ public  class Tarefa {
         this.titulo = titulo;
         this.descricao = descricao;
         this.status = status;
-
+        this.prazo = prazo;
     }
 
 
@@ -43,9 +38,13 @@ public  class Tarefa {
 
 
     public int getId() { return id; }
+
     public void setId(int id) { this.id = id; }
+
     public String getTitulo() { return titulo; }
+
     public String getDescricao() { return descricao; }
+
 
     public Boolean getComPrazo() {
         return comPrazo;
@@ -71,4 +70,12 @@ public  class Tarefa {
     public void setPrazo(Date prazo) {
         this.prazo = prazo;
     }
+
+    public void setTitulo(String titulo) {
+        this.titulo = titulo;
+    }
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+
 }

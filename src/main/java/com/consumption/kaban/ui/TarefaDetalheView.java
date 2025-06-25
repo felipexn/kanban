@@ -7,6 +7,10 @@ import com.consumption.kaban.model.Tarefa;
 import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 
 public class TarefaDetalheView extends JDialog {
     private final Tarefa tarefa;
@@ -20,21 +24,32 @@ public class TarefaDetalheView extends JDialog {
         this.aoAtualizar = aoAtualizar;
 
         setLayout(new BorderLayout());
-        setSize(400, 250);
+        setSize(600, 400);
         setLocationRelativeTo(parent);
 
         // Painel com os detalhes
         JPanel painel = new JPanel(new GridLayout(0, 1, 10, 10));
         painel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        painel.add(new JLabel("Título: " + tarefa.getTitulo()));
-        painel.add(new JLabel("Descrição: " + tarefa.getDescricao()));
-
+        painel.add(new JLabel("Título:"));
+        JTextField tituloField = new JTextField(tarefa.getTitulo());
+        tituloField.setPreferredSize(new Dimension(200, 30)); // largura 200, altura 30
+        painel.add(tituloField);
+        
+        painel.add(new JLabel("Descrição:"));
+        JTextArea descricaoArea = new JTextArea(tarefa.getDescricao());
+        descricaoArea.setLineWrap(true);
+        descricaoArea.setWrapStyleWord(true);
+        painel.add(new JScrollPane(descricaoArea)); // com scroll automático se necessário
+            
+        painel.add(new JLabel("Prazo:"));
+        JTextField prazoField = new JTextField();
         if (tarefa.getComPrazo() && tarefa.getPrazo() != null) {
-            painel.add(new JLabel("Prazo: " + tarefa.getPrazo()));
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+             prazoField.setText(sdf.format(tarefa.getPrazo()));
+            painel.add(prazoField);
         } else {
-            painel.add(new JLabel("Sem prazo definido"));
-        }
+            painel.add(new JLabel("Sem prazo definido"));}
 
         // ComboBox para mudar status
         painel.add(new JLabel("Status:"));
@@ -45,15 +60,38 @@ public class TarefaDetalheView extends JDialog {
         // Botões
         JButton salvarBtn = new JButton("Salvar");
         salvarBtn.addActionListener(e -> {
-            TarefaStatusEnum novoStatus = (TarefaStatusEnum) statusCombo.getSelectedItem();
-            if (novoStatus != null && novoStatus != tarefa.getStatus()) {
-                tarefa.setStatus(novoStatus);
+            try {
+                tarefa.setTitulo((tituloField.getText()));
+                tarefa.setDescricao(descricaoArea.getText());
+                tarefa.setStatus((TarefaStatusEnum) statusCombo.getSelectedItem());
+                
+                if (prazoField != null && !prazoField.getText().isBlank()) {
+                    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+                    
+                    Date dataConvertida = sdf.parse(prazoField.getText());
+
+            LocalDate hoje = LocalDate.now();
+            LocalDate prazoDigitado = dataConvertida.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+            if (!prazoDigitado.isAfter(hoje)) {
+                JOptionPane.showMessageDialog(this, "O prazo deve ser uma data futura!", "Data inválida", JOptionPane.WARNING_MESSAGE);
+                return; 
+            }
+                    tarefa.setPrazo(new java.sql.Date(dataConvertida.getTime()));
+                    tarefa.setComPrazo(true);
+                } else {
+                    tarefa.setPrazo(null);
+                    tarefa.setComPrazo(false);
+                }
+        
                 tarefaController.atualizarTarefa(tarefa);
-                JOptionPane.showMessageDialog(this, "Status atualizado com sucesso!");
-                aoAtualizar.run();  // Atualiza visualmente no painel kanban
+                JOptionPane.showMessageDialog(this, "Tarefa atualizada com sucesso!");
+                aoAtualizar.run();
                 dispose();
-            } else {
-                dispose();
+        
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Erro ao atualizar tarefa: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             }
         });
 

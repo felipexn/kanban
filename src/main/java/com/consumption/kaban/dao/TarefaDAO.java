@@ -16,32 +16,30 @@ public class TarefaDAO {
 
     // Salvar nova tarefa vinculada a um projeto
     public void salvar(Tarefa tarefa, int projetoId) throws SQLException {
-        String sql;
-        PreparedStatement stmt;
-
-        if (tarefa.getComPrazo()) {
-            sql = "INSERT INTO tarefa (titulo, descricao, status, prazo, projetoId, comPrazo) VALUES (?, ?, ?, ?, ?, ?)";
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, tarefa.getTitulo());
-            stmt.setString(2, tarefa.getDescricao());
-            stmt.setString(3, tarefa.getStatus().name());
-            stmt.setDate(4, tarefa.getPrazo()); // ✅ insere prazo normalmente
-            stmt.setInt(5, projetoId);
-            stmt.setBoolean(6, true); // comPrazo = true
-        } else {
-            sql = "INSERT INTO tarefa (titulo, descricao, status, prazo, projetoId, comPrazo) VALUES (?, ?, ?, ?, ?, ?)";
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, tarefa.getTitulo());
-            stmt.setString(2, tarefa.getDescricao());
-            stmt.setString(3, tarefa.getStatus().name());
-            stmt.setNull(4, Types.DATE); // ✅ insere NULL no campo prazo
-            stmt.setInt(5, projetoId);
-            stmt.setBoolean(6, false); // comPrazo = false
-        }
-
+        String sql = "INSERT INTO tarefa (titulo, descricao, status, prazo, projetoId, comPrazo) VALUES (?, ?, ?, ?, ?, ?)";
+        PreparedStatement stmt = conn.prepareStatement(sql);
+    
+        stmt.setString(1, tarefa.getTitulo());
+        stmt.setString(2, tarefa.getDescricao());
+        stmt.setString(3, tarefa.getStatus().name());
+    
+        trataTarefaComPrazo(tarefa, stmt);
+    
+        stmt.setInt(5, projetoId);
+    
         stmt.executeUpdate();
     }
 
+    public void trataTarefaComPrazo(Tarefa tarefa, PreparedStatement stmt) throws SQLException {
+        if (tarefa.getComPrazo() && tarefa.getPrazo() != null) {
+            stmt.setDate(4, new java.sql.Date(tarefa.getPrazo().getTime()));
+            stmt.setBoolean(6, true);
+        } else {
+            stmt.setNull(4, Types.DATE);
+            stmt.setBoolean(6, false);
+        }
+    }
+    
     // Listar tarefas de um projeto
     public List<Tarefa> buscarPorProjeto(int projetoId) throws SQLException {
         List<Tarefa> tarefas = new ArrayList<>();
@@ -51,7 +49,6 @@ public class TarefaDAO {
         ResultSet rs = stmt.executeQuery();
 
         while (rs.next()) {
-
             Tarefa tarefa = new Tarefa(
                     rs.getString("titulo"),
                     rs.getString("descricao"),
