@@ -10,6 +10,17 @@ public class Meta {
 
     private boolean concluida;
 
+    public boolean getComPrazo() {
+        return comPrazo;
+    }
+
+    public void setComPrazo(boolean comPrazo) {
+        this.comPrazo = comPrazo;
+    }
+
+    private Date prazo;
+    private boolean comPrazo;
+
     public int getProjetoId() {
         return projetoId;
     }
@@ -18,7 +29,7 @@ public class Meta {
         this.projetoId = projetoId;
     }
 
-    private Date prazo;
+
 
 
 

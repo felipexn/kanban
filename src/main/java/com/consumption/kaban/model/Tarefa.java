@@ -9,29 +9,29 @@ public  class Tarefa {
     protected String titulo;
     protected String descricao;
     protected int projetoId;
+    protected Date prazo;
+
+
 
     protected Boolean comPrazo;
 
-    public int getProjetoId() {
-        return projetoId;
-    }
 
-    public void setProjetoId(int projetoId) {
-        this.projetoId = projetoId;
-    }
-
-    protected Date prazo;
 
     protected TarefaStatusEnum status;
 
-    public Tarefa(String titulo, String descricao, String estado) {
+    public Tarefa(String titulo, String descricao, TarefaStatusEnum status) {
         this.titulo = titulo;
         this.descricao = descricao;
+        this.status = status;
 
     }
-    public void exebirDetalhes(){
+    public Tarefa(String titulo, String descricao, TarefaStatusEnum status, Date prazo) {
+        this.titulo = titulo;
+        this.descricao = descricao;
+        this.status = status;
 
     }
+
 
     public TarefaStatusEnum getStatus() {
         return status;
@@ -47,5 +47,28 @@ public  class Tarefa {
     public String getTitulo() { return titulo; }
     public String getDescricao() { return descricao; }
 
+    public Boolean getComPrazo() {
+        return comPrazo;
+    }
 
+    public void setComPrazo(Boolean comPrazo) {
+        this.comPrazo = comPrazo;
+    }
+    public int getProjetoId() {
+        return projetoId;
+    }
+
+    public void setProjetoId(int projetoId) {
+        this.projetoId = projetoId;
+    }
+
+
+
+    public java.sql.Date getPrazo() {
+        return (java.sql.Date) prazo;
+    }
+
+    public void setPrazo(Date prazo) {
+        this.prazo = prazo;
+    }
 }
