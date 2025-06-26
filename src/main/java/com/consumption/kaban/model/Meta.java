@@ -1,5 +1,7 @@
 package com.consumption.kaban.model;
 
+import com.consumption.kaban.enums.TarefaStatusEnum;
+
 import java.util.Date;
 
 public class Meta {
@@ -31,10 +33,8 @@ public class Meta {
 
 
 
-
-
     // Construtor sem ID (útil para novos registros)
-    public Meta(String descricao, Date prazo) {
+    public Meta(String descricao, Date prazo,boolean concluida) {
         this.descricao = descricao;
         this.prazo = prazo;
         this.concluida = false;
@@ -73,10 +73,6 @@ public class Meta {
         this.prazo = prazo;
     }
 
-    // Outros métodos (segundo o diagrama)
-    public void marcarConcluida() {
-        this.concluida = true;
-    }
 
 
 }

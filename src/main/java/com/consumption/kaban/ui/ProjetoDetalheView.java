@@ -1,10 +1,11 @@
 package com.consumption.kaban.ui;
 
+import com.consumption.kaban.controller.MetaController;
 import com.consumption.kaban.controller.TarefaController;
+import com.consumption.kaban.dao.DAOFactory;
 import com.consumption.kaban.enums.TarefaStatusEnum;
 import com.consumption.kaban.model.Projeto;
 import com.consumption.kaban.model.Tarefa;
-import com.consumption.kaban.dao.DAOFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,6 +20,7 @@ import java.util.List;
 public class ProjetoDetalheView extends JFrame {
     private final Projeto projeto;
     private final TarefaController tarefaController;
+    private final MetaController metaController;
 
     private DefaultListModel<Tarefa> fazerModel = new DefaultListModel<>();
     private DefaultListModel<Tarefa> fazendoModel = new DefaultListModel<>();
@@ -27,27 +29,34 @@ public class ProjetoDetalheView extends JFrame {
     public ProjetoDetalheView(Projeto projeto, DAOFactory daoFactory) throws SQLException {
         this.projeto = projeto;
         this.tarefaController = new TarefaController(daoFactory);
+        this.metaController = new MetaController(daoFactory);
 
         setTitle("Projeto: " + projeto.getNome());
-        setSize(800, 500);
+        setSize(900, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
         setLayout(new BorderLayout());
 
+        JPanel headerPanel = new JPanel(new BorderLayout());
         JLabel titulo = new JLabel("Projeto: " + projeto.getNome() + " - " + projeto.getDescricao());
-        titulo.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
-        add(titulo, BorderLayout.NORTH);
+        titulo.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        headerPanel.add(titulo, BorderLayout.WEST);
+
+        JButton metasBtn = new JButton("📌 Metas");
+        metasBtn.addActionListener(e -> {
+            new MetaDetalheView(this.projeto, metaController);
+        });
+        headerPanel.add(metasBtn, BorderLayout.EAST);
+        add(headerPanel, BorderLayout.NORTH);
 
         JPanel kanbanPanel = new JPanel(new GridLayout(1, 3, 10, 10));
-        kanbanPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+        kanbanPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         kanbanPanel.add(criarColuna("Fazer", fazerModel, TarefaStatusEnum.FAZER));
         kanbanPanel.add(criarColuna("Fazendo", fazendoModel, TarefaStatusEnum.FAZENDO));
         kanbanPanel.add(criarColuna("Feito", feitoModel, TarefaStatusEnum.FEITO));
 
         add(kanbanPanel, BorderLayout.CENTER);
-
         carregarTarefas();
         setVisible(true);
     }
@@ -86,8 +95,8 @@ public class ProjetoDetalheView extends JFrame {
 
         JButton adicionarBtn = new JButton("+ Tarefa");
         adicionarBtn.addActionListener(e -> adicionarTarefa(status));
-
         coluna.add(adicionarBtn, BorderLayout.SOUTH);
+
         return coluna;
     }
 

@@ -7,44 +7,43 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MetaDAO {
-    private Connection conn;
+    private final Connection conn;
 
     public MetaDAO(Connection conn) {
         this.conn = conn;
     }
 
-    // Salva uma nova meta associada a um projeto (com ou sem prazo)
+    // Salvar nova meta vinculada a um projeto
     public void salvar(Meta meta, int projetoId) throws SQLException {
-        if (meta.getComPrazo()) {
-            String sql = "INSERT INTO meta (descricao, concluida, prazo, projetoId) VALUES (?, ?, ?, ?)";
-            PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            stmt.setString(1, meta.getDescricao());
-            stmt.setBoolean(2, meta.isConcluida());
-            stmt.setDate(3, new java.sql.Date(meta.getPrazo().getTime()));
-            stmt.setInt(4, projetoId);
-            stmt.executeUpdate();
+        String sql = "INSERT INTO meta (descricao, concluida, prazo, projetoId, comPrazo) VALUES (?, ?, ?, ?, ?)";
+        PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
-            ResultSet generatedKeys = stmt.getGeneratedKeys();
-            if (generatedKeys.next()) {
-                meta.setId(generatedKeys.getInt(1));
-            }
+        stmt.setString(1, meta.getDescricao());
+        stmt.setBoolean(2, meta.isConcluida());
 
-        } else {
-            String sql = "INSERT INTO meta (descricao, concluida, projetoId) VALUES (?, ?, ?)";
-            PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            stmt.setString(1, meta.getDescricao());
-            stmt.setBoolean(2, meta.isConcluida());
-            stmt.setInt(3, projetoId);
-            stmt.executeUpdate();
+        trataMetaComPrazo(meta, stmt); // Define prazo (index 3) e comPrazo (index 5)
 
-            ResultSet generatedKeys = stmt.getGeneratedKeys();
-            if (generatedKeys.next()) {
-                meta.setId(generatedKeys.getInt(1));
-            }
+        stmt.setInt(4, projetoId);
+
+        stmt.executeUpdate();
+
+        ResultSet generatedKeys = stmt.getGeneratedKeys();
+        if (generatedKeys.next()) {
+            meta.setId(generatedKeys.getInt(1));
         }
     }
 
-    // Lista todas as metas de um projeto
+    public void trataMetaComPrazo(Meta meta, PreparedStatement stmt) throws SQLException {
+        if (meta.getComPrazo() && meta.getPrazo() != null) {
+            stmt.setDate(3, new java.sql.Date(meta.getPrazo().getTime()));
+            stmt.setBoolean(5, true);
+        } else {
+            stmt.setNull(3, Types.DATE);
+            stmt.setBoolean(5, false);
+        }
+    }
+
+    // Buscar todas as metas de um projeto
     public List<Meta> buscarPorProjeto(int projetoId) throws SQLException {
         List<Meta> metas = new ArrayList<>();
         String sql = "SELECT * FROM meta WHERE projetoId = ?";
@@ -53,16 +52,21 @@ public class MetaDAO {
         ResultSet rs = stmt.executeQuery();
 
         while (rs.next()) {
-            Meta meta = new Meta(rs.getString("descricao"), rs.getDate("prazo"));
+            Meta meta = new Meta(
+                    rs.getString("descricao"),
+                    rs.getDate("prazo"),
+                    rs.getBoolean("concluida")
+            );
             meta.setId(rs.getInt("id"));
-            meta.setConcluida(rs.getBoolean("concluida"));
+            meta.setProjetoId(projetoId);
+            meta.setComPrazo(rs.getBoolean("comPrazo"));
             metas.add(meta);
         }
 
         return metas;
     }
 
-    // Buscar uma meta pelo ID
+    // Buscar uma meta por ID
     public Meta buscarPorId(int id) throws SQLException {
         String sql = "SELECT * FROM meta WHERE id = ?";
         PreparedStatement stmt = conn.prepareStatement(sql);
@@ -70,27 +74,40 @@ public class MetaDAO {
         ResultSet rs = stmt.executeQuery();
 
         if (rs.next()) {
-            Meta meta = new Meta(rs.getString("descricao"), rs.getDate("prazo"));
+            Meta meta = new Meta(
+                    rs.getString("descricao"),
+                    rs.getDate("prazo"),
+                    rs.getBoolean("concluida")
+            );
             meta.setId(rs.getInt("id"));
-            meta.setConcluida(rs.getBoolean("concluida"));
+            meta.setProjetoId(rs.getInt("projetoId"));
+            meta.setComPrazo(rs.getBoolean("comPrazo"));
             return meta;
         }
 
         return null;
     }
 
-    // Atualizar uma meta (com ou sem prazo)
+    // Atualizar uma meta
     public void atualizar(Meta meta) throws SQLException {
-        String sql = "UPDATE meta SET descricao = ?, concluida = ?, prazo = ? WHERE id = ?";
+        String sql = "UPDATE meta SET descricao = ?, concluida = ?, prazo = ?, comPrazo = ? WHERE id = ?";
         PreparedStatement stmt = conn.prepareStatement(sql);
+
         stmt.setString(1, meta.getDescricao());
         stmt.setBoolean(2, meta.isConcluida());
-        stmt.setDate(3, meta.getPrazo() != null ? new java.sql.Date(meta.getPrazo().getTime()) : null);
-        stmt.setInt(4, meta.getId());
+
+        if (meta.getComPrazo() && meta.getPrazo() != null) {
+            stmt.setDate(3, new java.sql.Date(meta.getPrazo().getTime()));
+        } else {
+            stmt.setNull(3, Types.DATE);
+        }
+
+        stmt.setBoolean(4, meta.getComPrazo());
+        stmt.setInt(5, meta.getId());
         stmt.executeUpdate();
     }
 
-    // Remover uma meta
+    // Remover meta
     public void remover(int id) throws SQLException {
         String sql = "DELETE FROM meta WHERE id = ?";
         PreparedStatement stmt = conn.prepareStatement(sql);
